@@ -1,5 +1,5 @@
-from notion_client import NotionClient
-from notion_client import H1Block, H2Block, ToDoBlock, DividerBlock, ParagraphBlock, \
+from notion_api.notion_client import NotionClient
+from notion_api.notion_client import H1Block, H2Block, ToDoBlock, DividerBlock, ParagraphBlock, \
     NumberedItemBlock, BulletItemBlock, BookmarkBlock
 
 from recipe_scrapers import scrape_me
@@ -13,6 +13,8 @@ from pint import UndefinedUnitError, DimensionalityError
 from ingredient_parser.parsers import parse_ingredient
 from pint import UnitRegistry
 
+import csv
+
 ureg = UnitRegistry()
 Q_ = ureg.Quantity
 
@@ -23,6 +25,22 @@ from ingredient_processing import QUANTIZED_INGREDIENT_VOLUMES, INGREDIENT_DENSI
 # from ingredient_parser import parse_ingredient
 
 from recipe_obj import Recipe
+
+
+NOTION_SECRETS_FILEPATH = "./notion_secret.csv"
+
+def read_notion_secrets():
+    secrets = {}
+    try:
+        with open(NOTION_SECRETS_FILEPATH, mode='r') as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                secrets[row['name']] = row['code']
+    except FileNotFoundError:
+        print(f"Error: The file {NOTION_SECRETS_FILEPATH} does not exist.")
+    except Exception as e:
+        print(f"An error occurred while reading the secrets: {e}")
+    return secrets
 
 
 class Ingredient:
@@ -59,232 +77,6 @@ class Ingredient:
         return f"Ingredient: {self.ingredient_text} | Amount: {self.processed_ingredient}\n"
 
 
-# class Recipe:
-#     def __init__(self, inp, inp_type="url"):
-#         if inp_type == "url":
-#             self.url = inp
-#             self.scraped = self.scrape_recipe(self.url)
-#             self.recipe_1M_obj = None
-#         elif inp_type == "1M":
-#             self.recipe_1M_obj = inp
-#             self.scraped = None
-
-#         self.inp_type = inp_type
-
-#         if self.scraped is not None:
-#             try:
-#                 self.host = self.scraped.host()
-#             except:
-#                 self.host = "N/A"
-#             try:
-#                 self.title = self.scraped.title()
-#             except:
-#                 self.title = "Recipe"
-#             try:
-#                 self.image = self.scraped.image()
-#             except:
-#                 self.image = ''
-#             try:
-#                 self.total_time = self.scraped.total_time()
-#             except:
-#                 self.total_time = "N/A"
-#             try:
-#                 self.yields = self.scraped.yields()
-#             except:
-#                 self.yields = "N/A"
-#             try:
-#                 self.ingredients = self.scraped.ingredients()
-#             except:
-#                 self.ingredients = []
-#             try:
-#                 self.ingredient_groups = self.scraped.ingredient_groups()
-#             except:
-#                 self.ingredient_groups = []
-#             try:
-#                 self.directions = self.scraped.instructions()
-#             except:
-#                 self.directions = "N/A"
-#             try:
-#                 self.nutrients = self.scraped.nutrients()
-#             except:
-#                 self.nutrients = {}
-#             try:
-#                 self.ratings = self.scraped.ratings()
-#             except:
-#                 self.ratings = "N/A"
-#             try:
-#                 self.author = self.scraped.author()
-#             except:
-#                 self.author = "N/A"
-#             try:
-#                 self.prep_time = self.scraped.prep_time()
-#             except:
-#                 self.prep_time = "N/A"
-#             try:
-#                 self.cook_time = self.scraped.cook_time()
-#             except:
-#                 self.cook_time = "N/A"
-#             try:
-#                 self.description = self.scraped.description()
-#             except:
-#                 self.description = "N/A"
-#         elif self.recipe_1M_obj is not None:
-#             self.url = self.recipe_1M_obj.get('url')
-#             self.title = self.recipe_1M_obj.get('title')
-#             self.recipe_1M_ID = self.recipe_1M_obj.get('id')
-#             self.ingredients = self.parse_1M_ingredients()
-#             self.directions = self.parse_1M_directions()
-#             self.host = "N/A"
-#             self.total_time = "N/A"
-#             self.yields = "N/A"
-#             self.ingredient_groups = []
-#             self.nutrients = {}
-#             self.ratings = "N/A"
-#             self.author = "N/A"
-#             self.prep_time = "N/A"
-#             self.cook_time = "N/A"
-#             self.description = "N/A"
-#             self.image = ''
-#         else:
-#             self.host = "N/A"
-#             self.title = "Recipe"
-#             self.total_time = "N/A"
-#             self.yields = "N/A"
-#             self.ingredients = []
-#             self.ingredient_groups = []
-#             self.directions = "N/A"
-#             self.nutrients = {}
-#             self.ratings = "N/A"
-#             self.author = "N/A"
-#             self.prep_time = "N/A"
-#             self.cook_time = "N/A"
-#             self.description = "N/A"
-#             self.image = ''
-
-#     def parse_1M_ingredients(self):
-#         ingredients_obj = self.recipe_1M_obj.get('ingredients')
-#         ingredients_out = []
-
-#         for ingredient_obj in ingredients_obj:
-#             ingredient_txt = ingredient_obj.get('text')
-#             ingredients_out.append(ingredient_txt)
-
-#         return ingredients_out
-
-#     def parse_1M_directions(self):
-#         directions_obj = self.recipe_1M_obj.get('instructions')
-#         directions_out = []
-
-#         for direction_obj in directions_obj:
-#             direction_txt = direction_obj.get('text')
-#             directions_out.append(direction_txt)
-
-#         return directions_out
-
-#     def process_ingredients(self):
-#         return [Ingredient(ing) for ing in self.get_ingredients()]
-
-#     def get_volume(self, debug=False):
-#         vol_sum = 0
-
-#         for ingredient in self.process_ingredients():
-#             try:
-#                 if debug:
-#                     print(ingredient.get_volume())
-#                 vol_sum += ingredient.get_volume()
-#             except DimensionalityError as e:
-#                 if debug:
-#                     print("Error on converting", ingredient, e)
-#                 cc_vals = INGREDIENT_DENSITY_CONVERSIONS.get('cream cheese')
-#                 density_converted_unit = ingredient.ingredient_qty * ureg(ingredient.ingredient_unit.lower()) / (
-#                             cc_vals.get('density') * ureg(cc_vals.get('units')))
-#                 vol_sum += density_converted_unit
-
-#         return vol_sum
-
-#     def ingredient_breakdown(self, unit='volume', debug=False):
-#         processed_ingredients = self.process_ingredients()
-#         total_vol = self.get_volume(debug)
-#         if debug:
-#             print("Total volume:", total_vol)
-#         if unit == 'volume':
-#             volumes_vector = dict()
-#             for ingredient in processed_ingredients:
-#                 percent_vol = ingredient.get_volume().to(ureg("cup")) / total_vol
-#                 volumes_vector[ingredient.get_name()] = percent_vol.magnitude
-#             return volumes_vector
-
-#     @staticmethod
-#     def scrape_recipe(recipe_url, wild_mode=True):
-#         try:
-#             scraper = scrape_me(recipe_url, wild_mode=wild_mode)
-#             return scraper
-#         except (NoSchemaFoundInWildMode, exceptions.MissingSchema, WebsiteNotImplementedError) as e:
-#             print(e)
-#             return None
-#         except Exception as e:
-#             print(e)
-#             return None
-
-#     def get_title(self):
-#         return self.title
-
-#     def get_image(self):
-#         return self.image
-
-#     def get_author(self):
-#         return self.author
-
-#     def get_ingredients(self):
-#         return self.ingredients
-
-#     def get_ingredient_groups(self):
-#         return self.ingredient_groups
-
-#     def get_directions(self):
-#         if self.inp_type != "1M":
-#             return [ele for ele in self.directions.split('\n')]
-#         else:
-#             return self.directions
-
-#     def get_prep_time(self):
-#         return f'{self.prep_time}{" mins" if self.prep_time != "N/A" else ""}'
-
-#     def get_cook_time(self):
-#         return f'{self.cook_time}{" mins" if self.cook_time != "N/A" else ""}'
-
-#     def get_total_time(self):
-#         return f'{self.total_time}{" mins" if self.total_time != "N/A" else ""}'
-
-#     def get_rating(self):
-#         return self.ratings
-
-#     def get_yield(self):
-#         return self.yields
-
-#     def get_url(self):
-#         return self.url
-
-#     def get_description(self):
-#         return self.description
-
-#     def get_nutrients(self):
-#         formatted = {}
-#         # the scraper returns the names of nutrients with keys like
-#         #   "carboyhdrateContent": ...
-#         #   remove the "Content" bit and capitalize what's left
-#         for nutrient, val in self.nutrients.items():
-#             nut_name = nutrient.replace("Content", "").capitalize()
-#             formatted[nut_name] = val
-#         return formatted
-
-#     def __repr__(self):
-#         joined_ingredient_string = "\n\t\t• ".join([ingredient for ingredient in self.get_ingredients()])
-#         return f'{self.get_title()}:' \
-#                f'\n\tDescription: {self.get_description()}' \
-#                f'\n\tIngredients:\n\t\t• {joined_ingredient_string}'
-
-
 class RecipeClient:
     def __init__(self, client: NotionClient, recipe_database, ingredient_db):
         self.client = client
@@ -317,6 +109,10 @@ class RecipeClient:
         for ing in recipe_obj.get_ingredients():
             self.is_ingredient_in_db(ing)
 
+        yield 'data: Created recipe object.\n\n'
+
+        yield 'data: TEST IMMEDIATE YIELD\n\n'
+
         # Check if the recipe URL has already been added to the database
         print("Querying database...")
         recipes = self.database.get_pages()
@@ -330,6 +126,10 @@ class RecipeClient:
         print("\nScraping recipe...")
         # scrape the URL and turn the scraped data into a Recipe object
         recipe_obj = Recipe(recipe_link)
+
+        yield 'data: Scraped recipe data successfully.\n\n'
+
+        yield 'data: Test immediate yield.\n\n'
 
         # store the recipe's title for the database entry
         recipe_title = recipe_obj.get_title()
@@ -348,6 +148,8 @@ class RecipeClient:
         new_entry_res = self.database.add_entry(new_entry_data)
         print("Wrote to database with response:", new_entry_res)
 
+        yield 'data: Added new entry to database.\n\n'
+
         print("Getting database entry ID...")
         new_entry_id = new_entry_res.json()["id"]
         print("ID is:", new_entry_id)
@@ -363,6 +165,8 @@ class RecipeClient:
         print("Writing recipe information to entry...")
         edit_res = self.database.edit_entry_page(new_entry_id, self.write_recipe_json(recipe_obj))
         print("Wrote to entry with response:", edit_res)
+
+        yield 'data: Recipe information written to entry.\n\n'
 
     def is_ingredient_in_db(self, ingredient_str):
         return True

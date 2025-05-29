@@ -1,21 +1,21 @@
-from notion_client import NotionClient
-from recipe_client import RecipeClient, Recipe
+from notion_api.notion_client import NotionClient
+from recipe_client import RecipeClient, Recipe, read_notion_secrets
 
 # ########################
 # Notion API Request Stuff
 # ########################
 
+
+notion_secrets = read_notion_secrets()
+
 # Internal integration "secret" from Integrations page
-NOTION_TOKEN = "secret_4YDFvqvgQF894Hgu8IrfxeLLZj7FylLkZXHOf3KJdwr"
+NOTION_TOKEN = notion_secrets.get('notion_token')
 
 # https://stackoverflow.com/questions/67728038/where-to-find-database-id-for-my-database-in-notion
 # If your URL looks like `https://www.notion.so/<long_hash_1>?v=<long_hash_2>`,
 # then <long_hash_1> is the database ID and <long_hash_2> is the view ID.
-# https://www.notion.so/c58462890203448f9dcf50bea7c11580?v=60df777268d54d29a189ad96b2bbcbd1&pvs=4
-DATABASE_ID = "c58462890203448f9dcf50bea7c11580"
-
-# https://www.notion.so/cd2598ec2530433ab675f079e9e3cb3d?v=a3e863c46ee540d1bdf4af746092910f&pvs=4
-INGREDIENT_DB_ID = "cd2598ec2530433ab675f079e9e3cb3d"
+DATABASE_ID = notion_secrets.get('recipe_db_id')
+INGREDIENT_DB_ID = notion_secrets.get('ingredient_db_id')
 
 
 # #########################
