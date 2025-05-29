@@ -1,0 +1,32 @@
+allspice
+basil
+bay leaf
+caper
+cardamom
+cayenne pepper
+chives
+cilantro
+cinnamon
+coriander
+cumin
+dill
+fennel
+garlic
+ginger
+anise
+black pepper
+horseradish
+nutmeg
+onion powder
+oregano
+paprika
+parsley
+rosemary
+red pepper flakes
+saffron
+sage
+salt
+tarragon
+thyme
+turmeric
+wasabi
