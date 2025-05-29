@@ -1,0 +1,3 @@
+[submodule "notion-api"]
+	path = notion-api
+	url = https://github.com/Alexander-Greer/notion-api.git
